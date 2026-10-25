@@ -34,7 +34,18 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,8.6vw,52px);m
 @keyframes flick{0%{opacity:0}10%{opacity:.8}14%{opacity:.1}22%{opacity:.9}26%{opacity:.2}40%,100%{opacity:1}}
 .bat{position:fixed;width:46px;pointer-events:none;z-index:15;animation:batfly 3.6s ease-in forwards}
 @keyframes batfly{0%{transform:translate(0,0) scale(.4);opacity:0}10%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.2);opacity:0}}
-@media (prefers-reduced-motion:reduce){.coords,.coord-n,.coord-w{animation:none}.bat{display:none}#board{transition:none}}
+.replay{font-family:var(--display);font-size:19px;min-height:44px;padding:8px 26px;margin-top:4px;color:#e8f0ff;background:rgba(29,24,56,.9);border:1px solid #9fb4ff;border-radius:999px;cursor:pointer;box-shadow:0 0 16px rgba(160,190,255,.35);animation:flick 1.6s ease-out}
+.replay:focus-visible{outline:2px solid var(--beam);outline-offset:3px}
+/* hidden admin door: tap the moon three times */
+.admin{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(11,10,24,.86);padding:0 16px}
+.admin[hidden],.replay[hidden]{display:none}
+.acard{width:min(100%,320px);background:var(--dusk);border:1px solid #4a4478;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.acard label{font-family:var(--display);font-size:20px;color:#e8f0ff}
+.acard input{font:inherit;font-size:18px;padding:8px 10px;border-radius:8px;border:1px solid #4a4478;background:var(--night);color:var(--ink)}
+.arow{display:flex;gap:8px;justify-content:flex-end}
+.arow button{font:inherit;font-size:16px;min-height:44px;padding:6px 16px;border-radius:999px;border:1px solid #9fb4ff;background:transparent;color:var(--ink);cursor:pointer}
+.acard p{margin:0;min-height:1.2em;font-size:15px;color:#ff9a8a;font-style:italic}
+@media (prefers-reduced-motion:reduce){.coords,.coord-n,.coord-w,.replay{animation:none}.bat{display:none}#board{transition:none}}
 </style>
 
 <button class="music" id="musicBtn" aria-pressed="false" aria-label="Background music">♪ Music off</button>
@@ -43,7 +54,14 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,8.6vw,52px);m
   <div class="phases" aria-hidden="true"><span class="phase cur"></span><span class="phase"></span><span class="phase"></span></div>
   <div class="boardwrap"><canvas id="board" tabindex="0" aria-label="Crypt floor. Tap a mirror to turn it and steer the moonbeam onto every pumpkin."></canvas></div>
   <div class="coords" id="coords" hidden><div class="coord-n" id="cn"></div><div class="coord-w" id="cw"></div></div>
+  <button class="replay" id="replay" type="button" hidden>↺ Replay</button>
 </main>
+<div class="admin" id="admin" hidden><div class="acard" role="dialog" aria-modal="true" aria-labelledby="apwl">
+  <label id="apwl" for="apw">Password</label>
+  <input id="apw" type="password" autocomplete="off">
+  <p id="aerr" role="status"></p>
+  <div class="arow"><button id="acancel" type="button">Cancel</button><button id="aok" type="button">Open</button></div>
+</div></div>
 
 <script>
 (()=>{
@@ -302,6 +320,7 @@ function solved(){
     won=true;document.querySelectorAll(".phase").forEach(el=>{el.classList.add("done");el.classList.remove("cur");});
     victory();
     setTimeout(()=>{$("cn").textContent=FINAL[0];$("cw").textContent=FINAL[1];$("coords").hidden=false;},1300);
+    setTimeout(()=>{if(won)$("replay").hidden=false;},2800);
     if(!reduce){const svg='<svg viewBox="0 0 60 30"><path d="M30 10c-3-6-8-8-12-6 2 2 2 5 0 7-3-3-9-4-14-2 4 2 6 6 6 10 4-3 9-3 12 0 2-2 5-3 8-2 3-1 6 0 8 2 3-3 8-3 12 0 0-4 2-8 6-10-5-2-11-1-14 2-2-2-2-5 0-7-4-2-9 0-12 6z" fill="#0d0a14"/></svg>';
       const r=cv.getBoundingClientRect();
       for(let i=0;i<7;i++){const b=document.createElement("div");b.className="bat";b.innerHTML=svg;b.style.left=(r.left+r.width*(.2+Math.random()*.6))+"px";b.style.top=(r.top+r.height*(.3+Math.random()*.4))+"px";
@@ -309,7 +328,24 @@ function solved(){
   }
 }
 
+// replay appears only after the last floor, and always starts a fresh game from the first floor
+function restart(fromLevel){
+  won=false;locked=false;$("replay").hidden=true;$("coords").hidden=true;$("cn").textContent="";$("cw").textContent="";cv.classList.remove("fade");
+  for(let i=0;i<LEVELS.length;i++)LEVELS[i]=null;load(fromLevel||0);}
+$("replay").addEventListener("click",()=>{restart(0);window.scrollTo({top:0,behavior:reduce?"auto":"smooth"});});
+// admin door: three quick taps on the moon ask for the password; the right one jumps to the last floor and solves it
+const ADMIN=217580182;let moonTaps=[];
+function adminHash(t){let h=2166136261;t="jar-admin|"+t;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;}
+cv.addEventListener("pointerdown",e=>{if(!L)return;const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*(W/r.width),py=(e.clientY-r.top)*(H/r.height);
+  if(Math.hypot(px-c*.45,py-cy(L.r))>c*.5)return;
+  const now=performance.now();moonTaps=moonTaps.filter(t=>now-t<1500);moonTaps.push(now);
+  if(moonTaps.length>=3){moonTaps=[];$("aerr").textContent="";$("apw").value="";$("admin").hidden=false;$("apw").focus();}});
+function adminTry(){initAudio();if(adminHash($("apw").value)!==ADMIN){$("aerr").textContent="That's not it.";$("apw").select();return;}
+  $("admin").hidden=true;restart(LEVELS.length-1);
+  const s=L.sol;L.m.forEach((p,j)=>{const m=mir[key(p[0],p[1])];if(m.o!==s[j])turn(m);});}
+$("aok").addEventListener("click",adminTry);$("acancel").addEventListener("click",()=>{$("admin").hidden=true;});
+$("apw").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();adminTry();}else if(e.key==="Escape")$("admin").hidden=true;});
 load(0);requestAnimationFrame(frame);
-window.__mm={get o(){return L.m.map(p=>mir[key(p[0],p[1])].o).join("");},get lv(){return lv;},get won(){return won;},solve:()=>{const s=L.sol;L.m.forEach((p,j)=>{const m=mir[key(p[0],p[1])];if(m.o!==s[j])turn(m);});},set:(s)=>{L.m.forEach((p,j)=>{const m=mir[key(p[0],p[1])];if(m.o!==s[j])turn(m);});},load};
+window.__mm={moon:()=>{const r=cv.getBoundingClientRect();return [r.left+c*.45*r.width/W,r.top+cy(L.r)*r.height/H];},get o(){return L.m.map(p=>mir[key(p[0],p[1])].o).join("");},get lv(){return lv;},get won(){return won;},solve:()=>{const s=L.sol;L.m.forEach((p,j)=>{const m=mir[key(p[0],p[1])];if(m.o!==s[j])turn(m);});},set:(s)=>{L.m.forEach((p,j)=>{const m=mir[key(p[0],p[1])];if(m.o!==s[j])turn(m);});},load};
 })();
 </script>
