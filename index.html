@@ -70,6 +70,7 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,8.6vw,52px);m
 .notice .kicker{margin:0 0 6px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#9a90b5}
 .notice h2{margin:0 0 14px;font-family:var(--display);font-weight:700;font-size:clamp(1.4rem,5.5vw,2rem);line-height:1.15;color:#ffcf6e;text-shadow:0 0 16px rgba(255,207,110,.45);text-wrap:balance}
 .notice p.msg{margin:0 0 12px;font-size:clamp(1.05rem,4.2vw,1.2rem);line-height:1.6;color:#ece6f6}
+.notice .hl{font-family:var(--display);font-weight:700;color:#ff9f43;text-shadow:0 0 10px rgba(255,159,67,.75),0 0 22px rgba(255,120,30,.45);letter-spacing:.03em}
 .notice p.sign{margin:14px 0 0;font-family:var(--display);font-size:1.1rem;color:#ff9f43}
 .notice p.count{margin:16px auto 0;width:2.6em;height:2.6em;line-height:2.6em;border-radius:50%;border:1px solid rgba(255,207,110,.4);font-family:var(--display);font-weight:700;font-size:1.1rem;color:#ffcf6e;font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(255,207,110,.5)}
 .notice .skip{margin-top:14px;font-family:var(--text);font-size:14px;letter-spacing:.06em;color:#9a90b5;background:transparent;border:1px solid rgba(185,172,217,.35);border-radius:999px;padding:7px 18px;cursor:pointer}
@@ -89,8 +90,8 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,8.6vw,52px);m
     </svg>
     <p class="kicker">A decree from the moonlit rooftops</p>
     <h2 id="cloakTitle">To all of Chester's Minions</h2>
-    <p class="msg">Keep those paws busy and your lanterns lit, my loyal helpers. Halloween is creeping closer with every tick of the clock!</p>
-    <p class="msg">Every puzzle you crack fills my treat bag a little fuller. So no napping on the windowsill, no chasing your own tails &ndash; back to work, before the moon catches you dawdling.</p>
+    <p class="msg">Keep those paws busy and your lanterns lit, my loyal helpers. <span class="hl">Halloween</span> is creeping closer with every tick of the clock!</p>
+    <p class="msg">Every puzzle you crack and every log sheet you sign fills my treat bag a little fuller. So no napping on the windowsill, no chasing your own tails &ndash; back to work, before the moon catches you dawdling.</p>
     <p class="sign">&mdash; Chester &#128062;</p>
     <p class="count" id="cloakCount" aria-hidden="true">30</p>
     <button class="skip" id="cloakSkip" type="button">Tap to continue</button>
